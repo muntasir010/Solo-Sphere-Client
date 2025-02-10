@@ -1,28 +1,29 @@
-import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../provider/AuthProvider";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import { RiDeleteBinLine } from "react-icons/ri"
 import { FaRegEdit } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
+import useAxiosSecure from "../hooks/useAxiosSecure";
+import useAuth from "../hooks/useAuth";
 
 const MyPostedJob = () => {
-    const { user } = useContext(AuthContext);
+    const axiosSecure = useAxiosSecure();
+    const { user } = useAuth();
     const [jobs, setJobs] = useState([]);
 
     useEffect(() => {
-
+        getData()
     }, [user])
 
     const getData = async () => {
-        const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/jobs/${user?.email}`)
+        const { data } = await axiosSecure(`/jobs/${user?.email}`)
         setJobs(data)
     }
     getData()
 
     const handleDelete = async id => {
         try {
-            const { data } = await axios.delete(`${import.meta.env.VITE_API_URL}/jobs/${id}`)
+            const { data } = await axiosSecure.delete(`/jobs/${id}`)
             console.log(data);
             toast.success("Delete Successfully")
 

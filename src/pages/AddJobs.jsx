@@ -1,13 +1,15 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { AuthContext } from "../provider/AuthProvider";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import useAuth from "../hooks/useAuth";
+import useAxiosSecure from "../hooks/useAxiosSecure";
 
 const AddJobs = () => {
-    const { user } = useContext(AuthContext);
+    const { user } = useAuth()
+    const axiosSecure = useAxiosSecure()
     const navigate = useNavigate();
 
     const [startDate, setStartDate] = useState(new Date());
@@ -29,11 +31,12 @@ const AddJobs = () => {
                 email,
                 name: user?.displayName,
                 photo: user?.photoURL,
-            }
+            },
+            bid_count: 0
         }
 
         try {
-            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/job`, jobData)
+            const { data } = await axiosSecure.post(`/job`, jobData)
             console.log(data)
             toast.success('Job Data Uploaded Successfully')
             navigate('/my-posted-jobs')

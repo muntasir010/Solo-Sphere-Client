@@ -1,18 +1,20 @@
-import { useContext, useState } from "react";
-import { useLoaderData } from "react-router-dom";
-import { AuthContext } from "../provider/AuthProvider";
+import { useState } from "react";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import axios from "axios";
 import toast from "react-hot-toast"
+import useAxiosSecure from "../hooks/useAxiosSecure";
+import useAuth from "../hooks/useAuth";
 
 
 const JobDetails = () => {
-    const { user } = useContext(AuthContext);
+    const { user } = useAuth()
+    const axiosSecure = useAxiosSecure()
     const [startDate, setStartDate] = useState(new Date());
 
     const jobs = useLoaderData()
     const { _id, job_title, category, deadline, minPrice, maxPrice, description, buyer } = jobs || {};
+    const navigate = useNavigate();
 
     const handleFromSubmission = async e => {
         e.preventDefault()
@@ -32,18 +34,19 @@ const JobDetails = () => {
 
         const bidData = {
             jobId, price, deadline, comment, job_title, category, email, status,
-            buyer_email: buyer?.email,
+            buyer_email: buyer?.email, buyer
         };
         try {
-            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/bid`, bidData);
+            const { data } = await axiosSecure.post(`/bid`, bidData);
+            toast.success('Bid Placed Successfully')
+            navigate('/my-bids')
             console.log(data)
         }
         catch (err) {
-            console.error(err)
-            console.log('hi i am error', err.message)
+            toast.success(err.response.data)
+            e.target.reset()
         }
     }
-
 
     return (
         <div className='flex flex-col md:flex-row justify-around gap-5  items-center min-h-[calc(100vh-306px)] md:max-w-screen-xl mx-auto my-10'>
@@ -101,6 +104,7 @@ const JobDetails = () => {
                                 id='price'
                                 type='text'
                                 name='price'
+                                required
                                 className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md   focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40  focus:outline-none focus:ring'
                             />
                         </div>

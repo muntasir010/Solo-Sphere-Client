@@ -18,6 +18,9 @@ const Navbar = () => {
                     <li>
                         <Link to='/'>Home</Link>
                     </li>
+                    <li>
+                        <Link to='/jobs'>All Jobs</Link>
+                    </li>
 
                     {!user && (
                         <li>
@@ -34,7 +37,8 @@ const Navbar = () => {
                             className='btn btn-ghost btn-circle avatar'
                         >
                             <div
-                                title={user?.displayName} className='w-10 rounded-full' >
+                                title={user?.displayName}
+                         className='w-10 rounded-full' >
                                 <img
                                     referrerPolicy='no-referrer'
                                     alt='User Profile Photo'

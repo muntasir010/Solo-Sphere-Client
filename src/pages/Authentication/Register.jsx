@@ -1,13 +1,21 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../provider/AuthProvider";
 import toast from "react-hot-toast";
+import axios from "axios";
 
 const Register = () => {
-    const { user, setUser, createUser, signInWithGoogle, updateUserProfile, } = useContext(AuthContext);
+    const { user, setUser, createUser, signInWithGoogle, updateUserProfile, loading } = useContext(AuthContext);
     const navigate = useNavigate();
-
+    const location = useLocation();
+    useEffect(() => {
+        if (user) {
+            navigate('/')
+        }
+    }, [navigate, user])
+    const from = location.state || '/';
+    console.log(location, from)
     // email password signin
     const handleSignUp = async e => {
         e.preventDefault()
@@ -19,10 +27,19 @@ const Register = () => {
         console.log(email, password, name, photo)
         try {
             const result = await createUser(email, password)
-            console.log(result)
+
             await updateUserProfile(name, photo)
-            setUser({ ...user, photoURL: photo, displayName: name })
-            navigate('/')
+            // optimistic UI update
+            setUser({ ...result?.user, photoURL: photo, displayName: name })
+
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/jwt`, {
+                email: result?.user?.email
+            },
+                { withCredentials: true }
+            )
+            console.log(data)
+
+            navigate(from, { replace: true })
             toast.success('Signup Successful')
         }
         catch (err) {
@@ -34,15 +51,23 @@ const Register = () => {
     // google signin
     const handleGoogleSignIn = async () => {
         try {
-            await signInWithGoogle()
+            const result = await signInWithGoogle()
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/jwt`, {
+                email: result?.user?.email
+            },
+                { withCredentials: true }
+            )
+            console.log(data)
             toast.success('Signin Successful')
-            navigate('/')
+            navigate(from, { replace: true })
         }
         catch (err) {
             console.log(err)
             toast.error(err?.message)
         }
     }
+
+    if (user || loading) return
     return (
         <div className='flex justify-center items-center min-h-[calc(100vh-306px)] my-12'>
             <div className='flex w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-lg  lg:max-w-4xl '>

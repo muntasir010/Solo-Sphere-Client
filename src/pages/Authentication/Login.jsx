@@ -1,19 +1,36 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "../../provider/AuthProvider";
 import toast from "react-hot-toast";
+import axios from 'axios'
 
 const Login = () => {
-    const { signIn, signInWithGoogle } = useContext(AuthContext);
+    const { signIn, signInWithGoogle, user, loading } = useContext(AuthContext);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        if (user) {
+            navigate('/')
+        }
+    }, [navigate, user])
+    const from = location.state || '/';
+
 
     // google signin
     const handleGoogleSignIn = async () => {
         try {
-            await signInWithGoogle()
+            const result = await signInWithGoogle()
+            console.log(result.user)
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/jwt`, {
+                email: result?.user?.email
+            },
+                { withCredentials: true }
+            )
+            console.log(data)
             toast.success('Signin Successful')
-            navigate('/')
+            navigate(from, { replace: true })
         }
         catch (err) {
             console.log(err)
@@ -22,24 +39,30 @@ const Login = () => {
     }
 
     // email password signin
-    const handleSignIn = async e =>{
+    const handleSignIn = async e => {
         e.preventDefault()
-        const form = e.target 
+        const form = e.target
         const email = form.email.value;
         const password = form.password.value;
         console.log(email, password)
-        try{
+        try {
             const result = await signIn(email, password)
-            console.log(result)
-            navigate('/')
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/jwt`, {
+                email: result?.user?.email
+            },
+                { withCredentials: true }
+            )
+            console.log(data)
+            navigate(from, { replace: true })
             toast.success('Signin Successful')
         }
-        catch(err){
+        catch (err) {
             console.log(err)
             toast.error(err?.message)
         }
     }
 
+    if (user || loading) return
     return (
         <div className='flex justify-center items-center min-h-[calc(100vh-306px)] my-12'>
             <div className='flex w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-lg  lg:max-w-4xl '>
